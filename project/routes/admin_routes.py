@@ -20,21 +20,36 @@ def register_admin():
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT admin_id FROM admin WHERE del_flag = 'N' LIMIT 1;")
+            cur.execute(
+                """
+                SELECT id
+                FROM user_master
+                WHERE role = 'admin' AND isactive = TRUE
+                LIMIT 1;
+                """
+            )
             if cur.fetchone():
                 return jsonify({"error": "Admin already exists."}), 400
 
-            password_hash = hash_password(password)
             cur.execute(
                 """
-                INSERT INTO admin (username, password_hash, email)
-                VALUES (%s, %s, %s);
+                INSERT INTO user_master (username, password, email, role, roleid, isactive)
+                VALUES (%s, %s, %s, %s, %s, %s);
                 """,
-                (username, password_hash, username),
+                (
+                    username,
+                    hash_password(password),
+                    username,
+                    "admin",
+                    1,
+                    True,
+                ),
             )
         conn.commit()
-    except psycopg2.Error:
+    except psycopg2.Error as exc:
         conn.rollback()
+        if getattr(exc, "pgcode", None) == "23505":
+            return jsonify({"error": "Username already exists."}), 400
         return jsonify({"error": "Failed to register admin."}), 500
     finally:
         conn.close()
@@ -56,20 +71,27 @@ def login_admin():
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT admin_id, username, password_hash
-                FROM admin
-                WHERE username = %s AND del_flag = 'N';
+                SELECT id, username, password
+                FROM user_master
+                WHERE username = %s AND role = 'admin' AND isactive = TRUE;
                 """,
                 (username,),
             )
             user = cur.fetchone()
 
-        if not user or not verify_password(password, user["password_hash"]):
-            return jsonify({"error": "Invalid credentials"}), 401
+            if not user or not verify_password(password, user["password"]):
+                return jsonify({"error": "Invalid credentials"}), 401
+
+            cur.execute(
+                "UPDATE user_master SET lastlogin = CURRENT_TIMESTAMP WHERE id = %s;",
+                (user["id"],),
+            )
+        conn.commit()
 
         access_token = generate_access_token(identity=user["username"])
         return jsonify({"access_token": access_token, "username": user["username"]}), 200
     except psycopg2.Error:
+        conn.rollback()
         return jsonify({"error": "Failed to login admin."}), 500
     finally:
         conn.close()

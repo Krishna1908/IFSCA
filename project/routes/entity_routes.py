@@ -13,20 +13,27 @@ def register_entity():
     payload = request.get_json(silent=True) or {}
     username = payload.get("username")
     password = payload.get("password")
-    sector = payload.get("sector")
+    role_id = payload.get("role_id", 3)
 
-    if not username or not password or not sector:
-        return jsonify({"error": "Username, password, and sector are required."}), 400
+    if not username or not password:
+        return jsonify({"error": "Username and password are required."}), 400
 
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO regulated_entity (username, password_hash, email, sector)
-                VALUES (%s, %s, %s, %s);
+                INSERT INTO user_master (username, password, email, role, roleid, isactive)
+                VALUES (%s, %s, %s, %s, %s, %s);
                 """,
-                (username, hash_password(password), username, sector),
+                (
+                    username,
+                    hash_password(password),
+                    username,
+                    "regulated_entity",
+                    role_id,
+                    True,
+                ),
             )
         conn.commit()
     except psycopg2.Error as exc:
@@ -54,20 +61,27 @@ def login_entity():
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT entity, username, password_hash
-                FROM regulated_entity
-                WHERE username = %s AND del_flag = 'N';
+                SELECT id, username, password
+                FROM user_master
+                WHERE username = %s AND role = 'regulated_entity' AND isactive = TRUE;
                 """,
                 (username,),
             )
             user = cur.fetchone()
 
-        if not user or not verify_password(password, user["password_hash"]):
-            return jsonify({"error": "Invalid credentials"}), 401
+            if not user or not verify_password(password, user["password"]):
+                return jsonify({"error": "Invalid credentials"}), 401
+
+            cur.execute(
+                "UPDATE user_master SET lastlogin = CURRENT_TIMESTAMP WHERE id = %s;",
+                (user["id"],),
+            )
+        conn.commit()
 
         token = generate_access_token(identity=user["username"])
         return jsonify({"access_token": token, "username": user["username"]}), 200
     except psycopg2.Error:
+        conn.rollback()
         return jsonify({"error": "Failed to login regulated entity."}), 500
     finally:
         conn.close()
