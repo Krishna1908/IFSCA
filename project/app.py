@@ -19,18 +19,18 @@ def create_app() -> Flask:
     }
 
     swagger_template = {
+        "swagger": "2.0",
         "info": {
             "title": "IFSCAPoC Authentication API",
             "version": "1.0.0",
             "description": "Authentication endpoints for admin, regulator admin, and regulated entities.",
         },
-        "components": {
-            "securitySchemes": {
-                "bearerAuth": {
-                    "type": "http",
-                    "scheme": "bearer",
-                    "bearerFormat": "JWT",
-                }
+        "securityDefinitions": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+                "description": "JWT access token with Bearer prefix, e.g. 'Bearer <token>'.",
             }
         },
     }
@@ -51,17 +51,15 @@ def create_app() -> Flask:
         tags:
           - Auth
         security:
-          - bearerAuth: []
+          - BearerAuth: []
         responses:
           200:
             description: Token valid
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    username:
-                      type: string
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
           401:
             description: Missing or invalid token
         """

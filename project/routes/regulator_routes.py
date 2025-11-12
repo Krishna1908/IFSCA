@@ -16,23 +16,25 @@ def register_regulator():
     tags:
       - Regulator
     summary: Register a regulator admin user
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
-              role_id:
-                type: integer
-                description: Optional custom role id (defaults to 2)
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+            role_id:
+              type: integer
+              description: Optional custom role id (defaults to 2)
     responses:
       201:
         description: Regulator admin registered successfully
@@ -86,32 +88,32 @@ def login_regulator():
     tags:
       - Regulator
     summary: Authenticate regulator admin user and issue JWT
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
     responses:
       200:
         description: Login successful
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                access_token:
-                  type: string
-                username:
-                  type: string
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
+            username:
+              type: string
       400:
         description: Invalid request payload
       401:

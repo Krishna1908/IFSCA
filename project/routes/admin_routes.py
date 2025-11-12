@@ -16,20 +16,22 @@ def register_admin():
     tags:
       - Admin
     summary: Register the sole admin user
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
     responses:
       201:
         description: Admin registered successfully
@@ -93,32 +95,32 @@ def login_admin():
     tags:
       - Admin
     summary: Authenticate admin user and issue JWT
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
     responses:
       200:
         description: Login successful
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                access_token:
-                  type: string
-                username:
-                  type: string
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
+            username:
+              type: string
       400:
         description: Invalid request payload
       401:
