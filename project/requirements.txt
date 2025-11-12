@@ -3,3 +3,4 @@ Flask-JWT-Extended
 psycopg2-binary
 Werkzeug
 python-dotenv
+flasgger

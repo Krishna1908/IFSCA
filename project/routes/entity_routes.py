@@ -10,6 +10,37 @@ entity_bp = Blueprint("entity_routes", __name__)
 
 @entity_bp.route("/entity/register", methods=["POST"])
 def register_entity():
+    """
+    Register Regulated Entity
+    ---
+    tags:
+      - Regulated Entity
+    summary: Register a regulated entity user
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+              role_id:
+                type: integer
+                description: Optional custom role id (defaults to 3)
+    responses:
+      201:
+        description: Regulated entity registered successfully
+      400:
+        description: Username already exists or invalid payload
+      500:
+        description: Server error
+    """
     payload = request.get_json(silent=True) or {}
     username = payload.get("username")
     password = payload.get("password")
@@ -49,6 +80,45 @@ def register_entity():
 
 @entity_bp.route("/entity/login", methods=["POST"])
 def login_entity():
+    """
+    Regulated Entity Login
+    ---
+    tags:
+      - Regulated Entity
+    summary: Authenticate regulated entity user and issue JWT
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+    responses:
+      200:
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                username:
+                  type: string
+      400:
+        description: Invalid request payload
+      401:
+        description: Invalid credentials
+      500:
+        description: Server error
+    """
     payload = request.get_json(silent=True) or {}
     username = payload.get("username")
     password = payload.get("password")

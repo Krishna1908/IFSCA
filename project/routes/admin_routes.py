@@ -10,6 +10,34 @@ admin_bp = Blueprint("admin_routes", __name__)
 
 @admin_bp.route("/admin/register", methods=["POST"])
 def register_admin():
+    """
+    Register Admin
+    ---
+    tags:
+      - Admin
+    summary: Register the sole admin user
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+    responses:
+      201:
+        description: Admin registered successfully
+      400:
+        description: Admin already exists or invalid payload
+      500:
+        description: Server error
+    """
     payload = request.get_json(silent=True) or {}
     username = payload.get("username")
     password = payload.get("password")
@@ -59,6 +87,45 @@ def register_admin():
 
 @admin_bp.route("/admin/login", methods=["POST"])
 def login_admin():
+    """
+    Admin Login
+    ---
+    tags:
+      - Admin
+    summary: Authenticate admin user and issue JWT
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+    responses:
+      200:
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                username:
+                  type: string
+      400:
+        description: Invalid request payload
+      401:
+        description: Invalid credentials
+      500:
+        description: Server error
+    """
     payload = request.get_json(silent=True) or {}
     username = payload.get("username")
     password = payload.get("password")
